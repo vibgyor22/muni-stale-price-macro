@@ -3,235 +3,204 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Muni Stale-Price Macro | Vibhor Vanvani</title>
-<meta name="description" content="A systematic rates and commodities strategy: municipal-bond ETFs absorb Treasury moves over several days. Out-of-sample Sharpe 2.25 net of costs, 2018-2026.">
+<title>Muni stale-price strategy | Vibhor Vanvani</title>
+<meta name="description" content="Muni bond ETFs price Treasury moves with a 2-4 day lag. A hedged strategy trading that lag earned a 1.9 Sharpe ratio out of sample, 2018-2026, after costs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F4F6F9; --sheet:#FFFFFF; --ink:#0F1B2D; --muted:#5B6B80; --rule:#D5DCE6;
-  --signal:#2563EB; --signal-soft:#DCE7FD; --gain:#0E7C5A; --loss:#B42318;
-  --serif:"Newsreader", Georgia, serif; --sans:"IBM Plex Sans", system-ui, sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root{ --paper:#0E1520; --sheet:#151F2E; --ink:#E6EBF2; --muted:#9AA8BA; --rule:#2A3646;
-         --signal:#6C9CFF; --signal-soft:#1D2D4D; --gain:#4CC79A; --loss:#F27A6E; }
+  --bg:#0c0c0b; --raised:#141413; --text:#e8e4dc; --muted:#9a968e; --faint:#5c5a55;
+  --accent:#b8a88a; --sage:#8a9a82; --line:#2a2926;
+  --serif:"Newsreader", Georgia, serif; --sans:"Instrument Sans", system-ui, sans-serif;
 }
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--sans);font-variant-numeric:tabular-nums}
-a{color:var(--signal);text-underline-offset:3px}
-a:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:2px}
-.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
-.measure{max-width:690px}
-header.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0;color:var(--muted);font-size:15px}
-header.top a{color:var(--ink);text-decoration:none;font-weight:500}
-header.top nav a{margin-left:22px;color:var(--muted);font-weight:400}
-header.top nav a:hover{color:var(--ink)}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--text);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+::selection{background:rgba(184,168,138,.35)}
+a{color:var(--accent);text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{color:var(--text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.col{max-width:700px;margin:0 auto;padding:0 22px}
+.wide{max-width:900px;margin:0 auto;padding:0 22px}
 
-.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding:40px 0 56px;border-bottom:1px solid var(--rule)}
-h1{font:500 clamp(34px,4.6vw,52px)/1.08 var(--serif);letter-spacing:-0.01em;margin:0 0 20px}
-.lede{font-size:19px;color:var(--muted);margin:0 0 28px;max-width:34em}
-.cta{display:flex;gap:14px;flex-wrap:wrap}
-.btn{display:inline-block;padding:11px 18px;border-radius:6px;font-weight:500;font-size:15px;text-decoration:none}
-.btn.primary{background:var(--ink);color:var(--paper)}
-.btn.ghost{border:1px solid var(--rule);color:var(--ink)}
-.btn:hover{opacity:.88}
+.top{display:flex;justify-content:space-between;padding:26px 0 0;font-size:14px}
+.top a{color:var(--muted);text-decoration:none}
+.top a:hover{color:var(--text)}
 
-figure.lag{margin:0;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:18px 18px 10px}
-figure.lag figcaption{font-size:14px;color:var(--muted);margin-top:6px}
-.lag svg{width:100%;height:auto;display:block}
-.lag .axis{stroke:var(--rule)} .lag text{fill:var(--muted);font:12px var(--sans)}
-.lag .mub{stroke:var(--signal);fill:none;stroke-width:2.5}
-.lag .vteb{stroke:var(--ink);fill:none;stroke-width:1.5;stroke-dasharray:4 4;opacity:.75}
-.lag .band{fill:var(--signal-soft)}
-.lag .draw{stroke-dasharray:700;stroke-dashoffset:700;animation:draw 1.6s ease-out .3s forwards}
-@keyframes draw{to{stroke-dashoffset:0}}
-@media (prefers-reduced-motion: reduce){.lag .draw{animation:none;stroke-dashoffset:0}}
+h1{font:400 clamp(32px,5vw,46px)/1.12 var(--serif);margin:72px 0 22px;letter-spacing:-.01em}
+.lede{font:400 clamp(18px,2.2vw,21px)/1.6 var(--serif);margin:0 0 18px}
+.lede + .lede{color:var(--muted)}
+h2{font:400 26px/1.25 var(--serif);margin:64px 0 14px;padding-top:22px;border-top:1px solid var(--line)}
+h3{font:600 15px/1.4 var(--sans);margin:26px 0 6px}
+p{margin:0 0 14px}
+.small{font-size:14px;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
 
-section{padding:56px 0;border-bottom:1px solid var(--rule)}
-h2{font:500 30px/1.2 var(--serif);margin:0 0 14px}
-h3{font:600 17px/1.4 var(--sans);margin:28px 0 8px}
-p{margin:0 0 16px}
-.muted{color:var(--muted)}
+figure{margin:34px 0 10px}
+figure img,figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:14px;color:var(--muted);margin:10px auto 0;max-width:656px}
+svg text{font:12px var(--sans);fill:var(--muted)}
+.g{stroke:var(--line)}
+.l-mub{stroke:var(--accent);stroke-width:2.6;fill:none}
+.l-vteb{stroke:var(--sage);stroke-width:1.8;fill:none}
+.d{fill:var(--accent)}
+.zone{fill:var(--raised)}
 
-.facts{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);border-radius:10px;background:var(--sheet);margin-top:28px;overflow:hidden}
-.fact{padding:18px 20px;border-right:1px solid var(--rule)}
-.fact:last-child{border-right:0}
-.fact b{display:block;font:500 30px/1.1 var(--serif)}
-.fact span{font-size:14px;line-height:1.45;color:var(--muted);display:block;margin-top:6px}
-
-table{width:100%;border-collapse:collapse;font-size:15px;margin:10px 0 6px}
-th,td{padding:9px 10px;border-bottom:1px solid var(--rule);text-align:right}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:15px;margin:14px 0 8px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
 th:first-child,td:first-child{text-align:left}
-thead th{font-weight:600;color:var(--muted);font-size:14px}
-td.hl,th.hl{background:var(--signal-soft)}
-.tablewrap{overflow-x:auto;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:6px 12px}
-.plate{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:10px;margin:22px 0 8px}
-.plate img{width:100%;height:auto;display:block}
-.note{font-size:14px;color:var(--muted)}
+thead th{font-weight:500;color:var(--muted);font-size:13.5px}
+td.txt{text-align:left;color:var(--muted)}
+.oos{color:var(--text);font-weight:600}
 
-.mech{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:20px}
-.mech p{font-size:16px}
-.mech h3{margin-top:0}
-
-details{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:14px 18px;margin-top:18px}
-summary{cursor:pointer;font-weight:500}
+.years{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+ol.steps{padding-left:20px} ol.steps li{margin-bottom:10px}
 ul{padding-left:20px} li{margin-bottom:8px}
-footer{padding:36px 0 60px;color:var(--muted);font-size:14px}
-
-@media (max-width:860px){
-  .hero{grid-template-columns:1fr;gap:32px}
-  .facts{grid-template-columns:repeat(2,1fr)}
-  .fact:nth-child(2){border-right:0}
-  .fact:nth-child(-n+2){border-bottom:1px solid var(--rule)}
-  .mech{grid-template-columns:1fr}
-  header.top nav{display:none}
-}
+footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+@media (max-width:640px){ .years{grid-template-columns:1fr} h1{margin-top:48px} th,td{padding:7px 4px;font-size:14px} }
 </style>
 </head>
 <body>
-<div class="wrap">
-<header class="top">
-  <a href="#">Muni Stale-Price Macro</a>
-  <nav><a href="#edge">The edge</a><a href="#performance">Performance</a><a href="#strategy">Strategy</a><a href="#robustness">Robustness</a><a href="https://github.com/vibgyor22/muni-stale-price-macro">Code</a></nav>
-</header>
+<div class="col">
+  <nav class="top"><a href="https://vibgyor22.github.io/personal-website/">Vibhor Vanvani</a><a href="https://github.com/vibgyor22/muni-stale-price-macro">Code on GitHub</a></nav>
 
-<div class="hero">
-  <div>
-    <h1>Muni bonds take four days to finish reacting to a Treasury move. This book trades the gap.</h1>
-    <p class="lede">A systematic rates and commodities strategy built on markets where capital is slow, attention is limited or flows are forced. Net of trading costs, executed at the next day's open.</p>
-    <div class="cta">
-      <a class="btn primary" href="#performance">See the results</a>
-      <a class="btn ghost" href="https://github.com/vibgyor22/muni-stale-price-macro">View the code on GitHub</a>
-    </div>
-  </div>
-  <figure class="lag" aria-label="Chart: cumulative muni ETF response to a one standard deviation Treasury move, rising from about 12.6 basis points on day 0 to about 17 to 19 basis points by day 4 (axis starts at 10 bp)">
-    <svg viewBox="0 0 540 250" role="img">
-      <rect class="band" x="115" y="22" width="195" height="198" rx="2"/>
-      <text x="212" y="212" text-anchor="middle">the tradable catch-up</text>
-      <line class="axis" x1="50" y1="220" x2="510" y2="220"/>
-      <line class="axis" x1="50" y1="22" x2="50" y2="220"/>
-      <g text-anchor="end"><text x="44" y="224">10</text><text x="44" y="134">15</text><text x="44" y="44">20</text></g>
-      <line class="axis" x1="50" y1="130" x2="510" y2="130" stroke-dasharray="2 4"/><line class="axis" x1="50" y1="40" x2="510" y2="40" stroke-dasharray="2 4"/>
-      <g text-anchor="middle"><text x="50" y="240">day 0</text><text x="115" y="240">1</text><text x="180" y="240">2</text><text x="245" y="240">3</text><text x="310" y="240">4</text><text x="375" y="240">5</text><text x="440" y="240">6</text><text x="505" y="240">7</text></g>
-      <polyline class="vteb draw" points="50,169.1 115,111.5 180,77.4 245,80.5 310,56.2 375,50.6 440,44.3 505,41.4"/>
-      <polyline class="mub draw" points="50,173.6 115,129.3 180,111.3 245,99.0 310,86.6 375,105.5 440,101.7 505,114.0"/>
-      <text x="512" y="44" style="fill:var(--ink)">VTEB</text>
-      <text x="512" y="118" style="fill:var(--signal)">MUB</text>
+  <h1>Muni bond ETFs are slow to price Treasury moves</h1>
+  <p class="lede">When Treasury yields move, municipal-bond ETFs (MUB, VTEB) price in about 70% of the move the same day and the rest over the next two to four days. I buy the muni ETF against a Treasury hedge after Treasuries rally, and sell it after they fall.</p>
+  <p class="lede">From 2018 to 2026, out of sample and after trading costs, this earned a Sharpe ratio of 1.9. Combined with four smaller commodity and flow strategies, the portfolio's Sharpe ratio was 2.25.</p>
+</div>
+
+<div class="wide">
+  <figure aria-label="Line chart: cumulative muni ETF response to a one standard deviation Treasury move. MUB rises from 12.6 basis points on the same day to 17.4 four days later; VTEB from 12.8 to 19.1.">
+    <svg viewBox="0 0 640 245" role="img">
+      <rect class="zone" x="131" y="40" width="215" height="170"/>
+      <text x="238" y="200" text-anchor="middle">the lag I trade (days 1-4)</text>
+      <line class="g" x1="60" y1="210" x2="600" y2="210"/>
+      <line class="g" x1="60" y1="130" x2="600" y2="130" stroke-dasharray="2 5"/>
+      <line class="g" x1="60" y1="50" x2="600" y2="50" stroke-dasharray="2 5"/>
+      <g text-anchor="end"><text x="52" y="214">10 bp</text><text x="52" y="134">15 bp</text><text x="52" y="54">20 bp</text></g>
+      <g text-anchor="middle"><text x="60" y="232">same day</text><text x="131" y="232">+1</text><text x="203" y="232">+2</text><text x="274" y="232">+3</text><text x="346" y="232">+4</text><text x="417" y="232">+5</text><text x="489" y="232">+6</text><text x="560" y="232">+7 days</text></g>
+      <polyline class="l-vteb" points="60,164.7 131,113.5 203,83.3 274,86.0 346,64.4 417,59.4 489,53.8 560,51.3"/>
+      <polyline class="l-mub" points="60,168.7 131,129.4 203,113.4 274,102.5 346,91.4 417,108.2 489,104.9 560,115.8"/>
+      <circle class="d" cx="60" cy="168.7" r="3.5"/><circle class="d" cx="346" cy="91.4" r="3.5"/>
+      <text x="568" y="55" style="fill:var(--sage)">VTEB</text>
+      <text x="568" y="120" style="fill:var(--accent)">MUB</text>
     </svg>
-    <figcaption>Cumulative muni ETF response (bp, axis from 10) to a one-standard-deviation daily Treasury move, 2008-2026. About 65-75% arrives on day 0; the rest follows over the next 2-4 trading days.</figcaption>
+    <figcaption>Average cumulative move in each muni ETF after a one-standard-deviation daily move in Treasuries (IEF), 2008-2026.</figcaption>
   </figure>
 </div>
 
-<div class="facts" role="list">
-  <div class="fact" role="listitem"><b>2.25</b><span>Sharpe ratio, out-of-sample 2018-26</span></div>
-  <div class="fact" role="listitem"><b>-8.6%</b><span>Maximum drawdown at 10% volatility</span></div>
-  <div class="fact" role="listitem"><b>78%</b><span>Positive months, 2008-26</span></div>
-  <div class="fact" role="listitem"><b>19 of 19</b><span>Positive calendar years for the muni strategy</span></div>
+<div class="col">
+  <h2>Results</h2>
+  <p>Weekly returns after trading costs. The portfolio is scaled to 10% annual volatility using only past data, so returns grow or shrink in proportion to the risk taken. Every design decision used 2008-2017; 2018-2026 was held back as the test.</p>
+  <table>
+    <thead><tr><th>Portfolio</th><th>2008-17</th><th>2018-26 (test)</th><th>2008-26</th></tr></thead>
+    <tbody class="num">
+      <tr><td>Average annual return</td><td>29.9%</td><td class="oos">29.2%</td><td>29.5%</td></tr>
+      <tr><td>Annual volatility</td><td>10.5%</td><td class="oos">11.7%</td><td>11.1%</td></tr>
+      <tr><td>Sharpe ratio</td><td>2.56</td><td class="oos">2.25</td><td>2.40</td></tr>
+      <tr><td>Worst drawdown</td><td>-6.8%</td><td class="oos">-8.6%</td><td>-8.6%</td></tr>
+      <tr><td>Worst month</td><td>-6.8%</td><td class="oos">-5.9%</td><td>-6.8%</td></tr>
+      <tr><td>Months with a gain</td><td>82%</td><td class="oos">75%</td><td>78%</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Returns are in excess of cash, before fees. At 5% volatility, halve the returns and drawdowns; the Sharpe ratio stays the same.</p>
 </div>
 
-<section id="edge">
-  <div class="measure">
-    <h2>Why the gap exists</h2>
-    <p>The US municipal bond market is $4 trillion, yet most bonds go weeks without trading. Prices come from vendor models, and muni ETF market makers anchor to them. When Treasuries move, muni ETFs absorb most of the move that day and the remainder over the following days.</p>
-  </div>
-  <div class="mech">
-    <div><h3>Evaluated pricing</h3><p>Bonds are marked by pricing vendors once a day from sparse trades, so marks follow Treasury moves with a lag.</p></div>
-    <div><h3>Slow, tax-driven capital</h3><p>Holders are retail investors and funds buying for tax exemption. They rebalance slowly, so fund flows persist for weeks.</p></div>
-    <div><h3>Predictable cash</h3><p>Coupons and redemptions pay out around the start of each month and are reinvested in the following days.</p></div>
-  </div>
-</section>
+<div class="wide">
+  <figure>
+    <img src="img/equity_dark.png" alt="Growth of one dollar for the full portfolio and the muni strategy alone, 2008 to 2026, on a log scale, with drawdowns below. The worst drawdown is about 8.6%." loading="lazy">
+    <figcaption>Growth of $1 at 10% volatility (log scale) and drawdowns. Shaded area: the 2018-2026 test period.</figcaption>
+  </figure>
+</div>
 
-<section id="performance">
-  <h2>Performance</h2>
-  <p class="measure muted">Combined book, weekly returns, net of transaction costs, scaled to a 10% annual volatility target using trailing data only. 2008-2017 was used for design decisions; 2018-2026 is out-of-sample.</p>
-  <div class="plate"><img src="img/tearsheet.png" alt="Tearsheet: growth of one dollar on a log scale for the book and each strategy, drawdowns, and rolling one-year Sharpe ratio, 2008 to 2026" loading="lazy"></div>
-  <div class="tablewrap">
+<div class="col">
+  <h3>Returns by calendar year (10% volatility)</h3>
+  <div class="years">
+    <table>
+      <thead><tr><th>Year</th><th>Portfolio</th><th>Muni only</th></tr></thead>
+      <tbody class="num">
+        <tr><td>2009</td><td>17.4%</td><td>13.4%</td></tr>
+        <tr><td>2010</td><td>52.1%</td><td>45.6%</td></tr>
+        <tr><td>2011</td><td>24.1%</td><td>14.3%</td></tr>
+        <tr><td>2012</td><td>20.6%</td><td>19.5%</td></tr>
+        <tr><td>2013</td><td>29.9%</td><td>39.2%</td></tr>
+        <tr><td>2014</td><td>28.6%</td><td>15.1%</td></tr>
+        <tr><td>2015</td><td>35.9%</td><td>27.8%</td></tr>
+        <tr><td>2016</td><td>48.2%</td><td>51.2%</td></tr>
+        <tr><td>2017</td><td>18.1%</td><td>18.6%</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Year</th><th>Portfolio</th><th>Muni only</th></tr></thead>
+      <tbody class="num">
+        <tr><td>2018</td><td>21.1%</td><td>9.6%</td></tr>
+        <tr><td>2019</td><td>47.9%</td><td>47.6%</td></tr>
+        <tr><td>2020</td><td>20.7%</td><td>31.8%</td></tr>
+        <tr><td>2021</td><td>21.6%</td><td>16.8%</td></tr>
+        <tr><td>2022</td><td>79.4%</td><td>47.0%</td></tr>
+        <tr><td>2023</td><td>27.3%</td><td>30.1%</td></tr>
+        <tr><td>2024</td><td>6.9%</td><td>4.5%</td></tr>
+        <tr><td>2025</td><td>35.9%</td><td>26.1%</td></tr>
+        <tr><td>2026 (to Oct)</td><td>10.1%</td><td>14.7%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">No losing calendar year. The strongest years (2010, 2016, 2022) had large Treasury moves.</p>
+
+  <h2>How the trade works</h2>
+  <ol class="steps">
+    <li>Each evening, measure how far Treasuries (IEF) have moved over the last few days, in units of their normal daily move.</li>
+    <li>If Treasuries rallied, buy MUB and VTEB; if they sold off, sell them. Hedge each with IEF so the position is the muni-versus-Treasury gap, not a bet on rates.</li>
+    <li>Add three smaller inputs: recent stock-market moves (they reach munis late too), the 60-day trend in muni-versus-Treasury performance (fund flows persist), and a small long position in the first five business days of each month (coupon and redemption cash gets reinvested).</li>
+    <li>Trade at the next morning's open. Charge 1bp per side on the muni ETF and 0.5bp on the hedge. Skip trades that would change the position only slightly.</li>
+  </ol>
+
+  <h2>Why the lag exists</h2>
+  <p>Most municipal bonds go weeks without trading. Their prices come from vendor models that update from sparse trades, and muni ETF market makers anchor to those prices. The owners are mostly retail investors and funds buying for the tax exemption, who rebalance slowly. Prices that update slowly, held by investors who trade slowly, produce a predictable lag.</p>
+
+  <h2>The other four strategies</h2>
+  <p>Each takes 12.5% of the portfolio's risk. Their returns are almost uncorrelated with the muni strategy and with each other (all correlations below 0.1), which is why the portfolio's Sharpe ratio is higher than any single strategy's.</p>
   <table>
-    <thead><tr><th>Book, 10% volatility target</th><th>2008-17</th><th class="hl">2018-26 out-of-sample</th><th>Full sample</th></tr></thead>
+    <thead><tr><th>Strategy</th><th style="text-align:left">What it trades</th><th>Sharpe 2018-26</th></tr></thead>
     <tbody>
-      <tr><td>Annual return, excess of cash</td><td>29.9%</td><td class="hl">29.2%</td><td>29.5%</td></tr>
-      <tr><td>Volatility</td><td>10.5%</td><td class="hl">11.7%</td><td>11.1%</td></tr>
-      <tr><td>Sharpe ratio</td><td>2.56</td><td class="hl">2.25</td><td>2.40</td></tr>
-      <tr><td>Sortino ratio</td><td>4.51</td><td class="hl">3.66</td><td>4.01</td></tr>
-      <tr><td>Maximum drawdown</td><td>-6.8%</td><td class="hl">-8.6%</td><td>-8.6%</td></tr>
-      <tr><td>Calmar ratio</td><td>4.37</td><td class="hl">3.40</td><td>3.44</td></tr>
-      <tr><td>Positive months</td><td>82%</td><td class="hl">75%</td><td>78%</td></tr>
-      <tr><td>Worst month</td><td>-6.8%</td><td class="hl">-5.9%</td><td>-6.8%</td></tr>
+      <tr><td>Energy seasonal spreads</td><td class="txt">Calendar spreads in oil, gas, heating oil and gasoline futures, which follow the seasonal cycle of storage</td><td class="num">0.72</td></tr>
+      <tr><td>Pension rebalancing</td><td class="txt">Month-end stock and bond flows from funds that hold fixed 60/40 weights</td><td class="num">0.62</td></tr>
+      <tr><td>Gas storage, weather removed</td><td class="txt">Weekly gas storage changes minus the part explained by weather at 37 US weather stations</td><td class="num">0.48</td></tr>
+      <tr><td>Crude inventory</td><td class="txt">Four-week run of US crude stock surprises</td><td class="num">0.19</td></tr>
     </tbody>
   </table>
-  </div>
-  <details>
-    <summary>Monthly returns</summary>
-    <div class="plate"><img src="img/monthly_returns.png" alt="Heatmap of monthly returns of the book by year, 2009 to 2026" loading="lazy"></div>
-  </details>
-</section>
 
-<section id="strategy">
-  <h2>Strategy</h2>
-  <p class="measure">The muni strategy carries half of the risk. Four smaller strategies, each built on a separate economic friction, carry the rest. Their returns are nearly uncorrelated with each other (all pairwise correlations below 0.1), which is what lifts the combined Sharpe ratio above any single component.</p>
-  <div class="tablewrap">
+  <h2>Checks on the muni strategy</h2>
+  <p>The settings were picked from 32 variants using 2008-2017 data only. Across all 32, the median Sharpe ratio in 2018-2026 was 1.73.</p>
   <table>
-    <thead><tr><th>Strategy</th><th style="text-align:left">Economic mechanism</th><th>Risk weight</th><th>Sharpe 2018-26</th></tr></thead>
-    <tbody>
-      <tr><td><b>Muni catch-up</b></td><td style="text-align:left">Muni ETFs (MUB, VTEB) hedged with Treasuries (IEF); long after Treasury and equity rallies, plus fund-flow momentum and start-of-month reinvestment</td><td>50%</td><td><b>1.86</b></td></tr>
-      <tr><td>Energy seasonal spreads</td><td style="text-align:left">Storage-cycle risk premia in WTI, natural gas, heating oil and gasoline calendar spreads</td><td>12.5%</td><td>0.72</td></tr>
-      <tr><td>Crude inventory</td><td style="text-align:left">Prices under-react to sustained EIA crude inventory surprises</td><td>12.5%</td><td>0.19</td></tr>
-      <tr><td>Weather-adjusted gas storage</td><td style="text-align:left">Storage changes stripped of weather with a 37-station NOAA model; the structural remainder is under-priced</td><td>12.5%</td><td>0.48</td></tr>
-      <tr><td>Pension rebalancing</td><td style="text-align:left">Predictable month-end equity and bond flows from fixed-weight mandates</td><td>12.5%</td><td>0.62</td></tr>
+    <thead><tr><th>Muni strategy, daily, after costs</th><th>2008-17</th><th>2018-26</th></tr></thead>
+    <tbody class="num">
+      <tr><td>As built</td><td>1.84</td><td class="oos">1.85</td></tr>
+      <tr><td>Trading costs doubled</td><td>1.65</td><td class="oos">1.62</td></tr>
+      <tr><td>Trading costs tripled</td><td>1.47</td><td class="oos">1.38</td></tr>
+      <tr><td>MUB only</td><td>1.77</td><td class="oos">1.58</td></tr>
+      <tr><td>VTEB only</td><td>2.06</td><td class="oos">1.92</td></tr>
+      <tr><td>Placebo: Treasury moves from a year earlier</td><td>0.07</td><td class="oos">-0.07</td></tr>
     </tbody>
   </table>
-  </div>
-  <h3>How the muni signal is built</h3>
-  <ul class="measure">
-    <li><b>Catch-up:</b> a short exponential average of recent Treasury returns, in volatility units.</li>
-    <li><b>Risk:</b> the same for equities, at a smaller weight; risk sentiment also reaches munis late.</li>
-    <li><b>Flow:</b> 60-day momentum of the hedged muni return, capturing persistent fund flows.</li>
-    <li><b>Calendar:</b> a long tilt in the first five business days of each month.</li>
-    <li><b>Execution:</b> signals at the close, trades at the next open, hedged at a rolling one-year beta, 1bp per side on the muni ETF and 0.5bp on the hedge, with a no-trade band to limit turnover.</li>
+  <p class="small">The placebo uses the same model on unrelated Treasury moves. It earns nothing, which is what a real effect should show.</p>
+
+  <h2>Limits</h2>
+  <ul>
+    <li><b>Size.</b> MUB and VTEB trade about $650m a day combined. At 10% volatility the strategy holds 2-3 times its capital in gross positions, so it suits tens to low hundreds of millions, not billions.</li>
+    <li><b>Concentration.</b> Half the risk is in one strategy. With equal weights across all five, the 2018-2026 Sharpe ratio is 1.77.</li>
+    <li><b>Execution.</b> The backtest fills at the official opening price with fixed costs; real opening auctions can be noisier.</li>
+    <li><b>Data.</b> The US Energy Information Administration stopped publishing its futures-curve data in April 2024, so the energy spread strategy ends there.</li>
   </ul>
-</section>
 
-<section id="robustness">
-  <h2>Robustness</h2>
-  <p class="measure">The muni strategy's specification was chosen on 2008-2017 data only, from a grid of 32 variants. Across all 32, the median out-of-sample Sharpe ratio is 1.73. A placebo that feeds the same model Treasury moves from a year earlier earns nothing.</p>
-  <div class="plate"><img src="img/robustness.png" alt="Bar chart of Sharpe ratios for the muni strategy under cost, parameter and component variations, and a placebo near zero" loading="lazy"></div>
-  <div class="tablewrap">
-  <table>
-    <thead><tr><th>Muni strategy (daily, net)</th><th>2008-17</th><th class="hl">2018-26</th></tr></thead>
-    <tbody>
-      <tr><td>Base case</td><td>1.84</td><td class="hl">1.85</td></tr>
-      <tr><td>Trading costs doubled</td><td>1.65</td><td class="hl">1.62</td></tr>
-      <tr><td>Trading costs tripled</td><td>1.47</td><td class="hl">1.38</td></tr>
-      <tr><td>MUB only</td><td>1.77</td><td class="hl">1.58</td></tr>
-      <tr><td>VTEB only</td><td>2.06</td><td class="hl">1.92</td></tr>
-      <tr><td>Placebo: Treasury moves lagged one year</td><td>0.07</td><td class="hl">-0.07</td></tr>
-    </tbody>
-  </table>
-  </div>
-</section>
+  <h2>Data and code</h2>
+  <p>All data is free and public: Yahoo Finance for ETF and futures prices, the US Energy Information Administration for futures curves, crude stocks and gas storage, and NOAA for weather. The full analysis reruns from scratch with two commands. Code, methodology and every table are on <a href="https://github.com/vibgyor22/muni-stale-price-macro">GitHub</a>.</p>
 
-<section id="risks">
-  <div class="measure">
-    <h2>Risks and limitations</h2>
-    <ul>
-      <li><b>Capacity.</b> MUB and VTEB trade about $650m a day combined. At a 10% volatility target the muni strategy runs about 2-3x gross notional, so realistic capacity is in the low hundreds of millions.</li>
-      <li><b>Concentration.</b> Half of the risk sits in one strategy. An equal-weight book returns a 1.77 Sharpe ratio out-of-sample.</li>
-      <li><b>Execution.</b> Results assume fills at the official opening print and fixed costs per side; opening auctions can be noisier.</li>
-      <li><b>Returns</b> are excess of cash, before fees, and assume financing at the cash rate.</li>
-      <li><b>Data.</b> EIA stopped publishing its futures-curve series in April 2024, so the energy spread strategy ends there.</li>
-    </ul>
-    <h3>Data</h3>
-    <p class="muted">All public and free: Yahoo Finance (ETF and futures prices), US Energy Information Administration (futures curves, crude stocks, gas storage), NOAA GHCN-Daily (weather). The full pipeline reruns from scratch with two commands.</p>
-  </div>
-</section>
-
-<footer>
-  <p>Vibhor Vanvani. MPhil Economics and Data Science, University of Cambridge. Research project; not investment advice.<br>
-  <a href="https://github.com/vibgyor22/muni-stale-price-macro">github.com/vibgyor22/muni-stale-price-macro</a></p>
-</footer>
+  <footer>
+    <span>Vibhor Vanvani. Research project, not investment advice.</span>
+    <span><a href="https://vibgyor22.github.io/personal-website/">Personal website</a> &nbsp; <a href="https://github.com/vibgyor22">GitHub</a></span>
+  </footer>
 </div>
 </body>
 </html>

@@ -2,8 +2,8 @@
 
 # Muni Stale-Price Macro
 
-**Prices adjust slowly where capital is slow, attention is scarce or flows are forced.
-This repo turns that one idea into a systematic rates + commodities book.**
+Muni bond ETFs (MUB, VTEB) price in about 70% of a Treasury move the same day and the rest over the next 2-4 days.
+This strategy buys them against a Treasury hedge after Treasuries rally and sells after they fall.
 
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![data](https://img.shields.io/badge/data-100%25%20free%20%26%20public-brightgreen)
@@ -11,23 +11,23 @@ This repo turns that one idea into a systematic rates + commodities book.**
 ![period](https://img.shields.io/badge/backtest-2008--2026-lightgrey)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
-**[Project website](https://vibgyor22.github.io/muni-stale-price-macro/)** | [Methodology](docs/methodology.md) | [Literature](docs/literature.md)
+**[Project website](https://vibgyor22.github.io/muni-stale-price-macro/)** | [Methodology](docs/methodology.md) | [Literature](docs/literature.md) | [Author](https://vibgyor22.github.io/personal-website/)
 
 </div>
 
 ---
 
-## TL;DR
+## Summary
 
-- **Flagship (rates): Slow Munis.** Municipal-bond ETFs price in only 65-75% of a Treasury move on the day and the rest over the next 2-4 days. Trading that catch-up, hedged with Treasuries and executed at the **next morning's open**, earns a **Sharpe of 1.9 net of costs** (1.93 out of sample), is positive in **every calendar year 2008-2026** and drops to **0.0 under a placebo**.
-- **Four diversifiers** built on the physical storage cycle in energy and on forced pension rebalancing add Sharpe 0.3-0.8 each and are **uncorrelated** with the flagship (|ρ| < 0.08).
-- **Combined book: Sharpe 2.40 (2.25 out of sample), max drawdown -8.6% at a 10% vol target, 78% positive months.**
+- **The effect.** When Treasury yields move, muni ETFs move about 70% as far as they eventually will on the same day. The rest arrives over the next 2-4 trading days.
+- **The trade.** Buy MUB and VTEB, hedged with IEF, after Treasuries rally; sell them after Treasuries fall. Trades go in at the next morning's open, after costs.
+- **The result.** 2018-2026 (held out as the test period): Sharpe ratio 1.9 for the muni strategy alone, 2.25 for the full portfolio, which adds four smaller, uncorrelated commodity and flow strategies. No losing calendar year since 2009.
 
 ## Results at a glance
 
 ![tearsheet](results/tearsheet.png)
 
-| Book, 10% ex-ante vol target, net of costs | 2008-17 (design) | **2018-26 (out-of-sample)** | Full sample |
+| Portfolio, 10% ex-ante vol target, net of costs | 2008-17 (design) | **2018-26 (out-of-sample)** | Full sample |
 |:--|--:|--:|--:|
 | Annual return (excess of cash) | 29.9% | **29.2%** | 29.5% |
 | Volatility | 10.5% | **11.7%** | 11.1% |
@@ -46,6 +46,22 @@ This repo turns that one idea into a systematic rates + commodities book.**
 
 </details>
 
+### Returns by calendar year (10% volatility, after costs)
+
+| Year | Portfolio | Muni only | | Year | Portfolio | Muni only |
+|:--|--:|--:|:--|:--|--:|--:|
+| 2009 | 17.4% | 13.4% | | 2018 | 21.1% | 9.6% |
+| 2010 | 52.1% | 45.6% | | 2019 | 47.9% | 47.6% |
+| 2011 | 24.1% | 14.3% | | 2020 | 20.7% | 31.8% |
+| 2012 | 20.6% | 19.5% | | 2021 | 21.6% | 16.8% |
+| 2013 | 29.9% | 39.2% | | 2022 | 79.4% | 47.0% |
+| 2014 | 28.6% | 15.1% | | 2023 | 27.3% | 30.1% |
+| 2015 | 35.9% | 27.8% | | 2024 | 6.9% | 4.5% |
+| 2016 | 48.2% | 51.2% | | 2025 | 35.9% | 26.1% |
+| 2017 | 18.1% | 18.6% | | 2026 (to Oct) | 10.1% | 14.7% |
+
+Returns are excess of cash and before fees. They scale with the volatility target: at 5% volatility, halve them; the Sharpe ratio is unchanged.
+
 ## The hypotheses
 
 | # | Hypothesis | Economic mechanism | Data | Verdict (Sharpe, 2018-26 out-of-sample) |
@@ -63,7 +79,7 @@ flowchart LR
     C[EIA crude stocks] --> E2[Inventory under-reaction]
     D[NOAA weather + EIA gas storage] --> G[Weather-stripped storage]
     F[60/40 drift] --> R[Rebalancing flows]
-    M & E1 & E2 & G & R --> P[Risk-normalised book<br/>munis 50%, others 12.5%]
+    M & E1 & E2 & G & R --> P[Portfolio<br/>munis 50%, others 12.5% each]
     P --> V[10% vol target]
 ```
 
@@ -112,8 +128,8 @@ flowchart LR
 | E2. Crude inventory | 0.81 | 0.19 | 0.50 | 2.2 |
 | G. NG weather-stripped storage | -0.44 | 0.48 | 0.28 | 0.9 |
 | R. Pension rebalancing | 0.92 | 0.62 | 0.79 | 3.5 |
-| **Book (munis 50%)** | **2.67** | **2.13** | **2.42** | **10.4** |
-| Book (naive equal weight) | 2.36 | 1.77 | 2.09 | 9.0 |
+| **Portfolio (munis 50%)** | **2.67** | **2.13** | **2.42** | **10.4** |
+| Portfolio (equal weights) | 2.36 | 1.77 | 2.09 | 9.0 |
 
 <img src="results/correlations.png" width="430">
 
@@ -163,4 +179,4 @@ Key references (full list in [`docs/literature.md`](docs/literature.md)): Duffie
 
 ---
 
-*Research project by Vibhor Vanvani. Not investment advice.*
+*Research project by [Vibhor Vanvani](https://vibgyor22.github.io/personal-website/). Not investment advice.*
