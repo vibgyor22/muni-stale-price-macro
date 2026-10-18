@@ -1,0 +1,13 @@
+,2008-17 (design),2018-26 (out-of-sample),Full sample
+CAGR,27.3%,25.1%,26.2%
+Volatility,12.0%,12.0%,12.0%
+Sharpe,2.08,1.93,2.01
+Sortino,4.14,3.00,3.49
+Max drawdown,-6.3%,-10.0%,-10.0%
+Calmar,4.33,2.50,2.61
+t-stat (Sharpe),6.43,5.73,8.61
+% positive months,78.1%,71.7%,75.0%
+Best month,18.4%,14.8%,18.4%
+Worst month,-6.3%,-7.6%,-7.6%
+Skew (weekly),2.77,1.55,2.18
+Years,9.5,8.8,18.4
