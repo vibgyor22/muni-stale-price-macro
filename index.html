@@ -72,6 +72,12 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
   .flowfig{display:none} .mobileonly{display:block}
   figure svg:not(.flowsvg) text{font-size:18px}
 }
+
+.eq{font:15px/1.7 var(--sans);background:var(--raised);border-left:2px solid var(--accent);padding:12px 16px;margin:14px 0 16px;color:var(--text);overflow-x:auto;white-space:nowrap}
+.eq i{font-family:var(--serif);font-size:16.5px}
+.read{font-size:14.5px;color:var(--muted);margin:-4px 0 14px}
+.read b{color:var(--text);font-weight:500}
+td.l{text-align:left}
 </style>
 </head>
 <body>
@@ -143,15 +149,29 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
     <li><b>Strategy:</b> measure the Treasury move at the close, take a hedged position in MUB and VTEB against IEF, execute at the next open and hold through the catch-up.</li>
   </ol>
 
-  <h3>Measured lag</h3>
+  <h2>Statistical evidence for the lag</h2>
+  <h3>1. Distributed-lag regression</h3>
+  <p>Regress each muni ETF's daily return on today's and the previous five days' Treasury (IEF) returns. If munis priced Treasury news immediately, every lagged coefficient would be zero.</p>
+  <div class="eq"><i>r</i><sub>muni,t</sub> = &alpha; + &beta;<sub>0</sub><i>r</i><sub>IEF,t</sub> + &beta;<sub>1</sub><i>r</i><sub>IEF,t-1</sub> + &hellip; + &beta;<sub>5</sub><i>r</i><sub>IEF,t-5</sub> + &epsilon;<sub>t</sub></div>
   <table>
-    <thead><tr><th>ETF</th><th>Beta to IEF, 1 day</th><th>Beta to IEF, 10 days</th><th>Priced on day one</th><th>Corr. of IEF today with hedged ETF tomorrow</th></tr></thead>
-    <tbody class="num">
-      <tr><td>MUB</td><td>0.30</td><td>0.41</td><td>73%</td><td>0.11</td></tr>
-      <tr><td>VTEB</td><td>0.35</td><td>0.54</td><td>65%</td><td>0.17</td></tr>
+    <thead><tr><th>Coefficient (Newey-West t-stat)</th><th>MUB</th><th>VTEB</th></tr></thead>
+    <tbody class="num"><tr><td>IEF return, day t</td><td>0.304 <span class='small'>(17.3)</span></td><td>0.357 <span class='small'>(14.1)</span></td></tr><tr><td>IEF return, day t-1</td><td>0.083 <span class='small'>(2.6)</span></td><td>0.119 <span class='small'>(1.9)</span></td></tr><tr><td>IEF return, day t-2</td><td>0.038 <span class='small'>(2.1)</span></td><td>0.073 <span class='small'>(2.6)</span></td></tr><tr><td>IEF return, day t-3</td><td>0.027 <span class='small'>(1.3)</span></td><td>0.013 <span class='small'>(0.3)</span></td></tr><tr><td>IEF return, day t-4</td><td>0.016 <span class='small'>(1.1)</span></td><td>0.044 <span class='small'>(2.1)</span></td></tr><tr><td>IEF return, day t-5</td><td>-0.018 <span class='small'>(-1.1)</span></td><td>0.012 <span class='small'>(0.6)</span></td></tr>
+      <tr><td><b>Sum of lags 1-5</b></td><td><b>0.146</b></td><td><b>0.260</b></td></tr>
+      <tr><td>Joint test, lags 1-5 = 0 (F, p-value)</td><td>10.5, p = 0.001</td><td>12.9, p = &lt;0.001</td></tr>
+      <tr><td>Share of total response on day t</td><td>68%</td><td>58%</td></tr>
+      <tr><td>R², observations</td><td>0.17, 4,801</td><td>0.23, 2,797</td></tr>
     </tbody>
   </table>
-  <p class="small">Daily data, 2008-2026 (VTEB from 2015).</p>
+  <p class="read"><b>Reading:</b> the lagged coefficients are positive and jointly significant for both ETFs. Between a third (MUB) and two-fifths (VTEB) of the eventual response to a Treasury move arrives after the day it happens.</p>
+
+  <h3>2. Predictive regression</h3>
+  <p>Regress the next day's hedged muni return on today's signal. The dependent variable is in units of its own trailing volatility, so the slope reads as risk-adjusted predictability.</p>
+  <div class="eq"><i>y</i><sub>t+1</sub> = <i>a</i> + <i>b</i>&middot;<i>s</i><sub>t</sub> + <i>u</i><sub>t+1</sub>, &nbsp;&nbsp; <i>y</i> = (<i>r</i><sub>muni</sub> &minus; &beta;<sub>250d</sub><i>r</i><sub>IEF</sub>) / &sigma;<sub>60d</sub></div>
+  <table>
+    <thead><tr><th>Sample</th><th>Slope b (t)</th><th>R²</th><th>Rank IC</th><th>Direction hit rate</th></tr></thead>
+    <tbody class="num"><tr><td>MUB, 2008-17</td><td>0.19 <span class='small'>(4.4)</span></td><td>1.9%</td><td>0.10</td><td>54.1%</td></tr><tr><td>MUB, 2018-26</td><td>0.19 <span class='small'>(4.5)</span></td><td>2.4%</td><td>0.16</td><td>55.7%</td></tr><tr><td>VTEB, 2016-17</td><td>0.20 <span class='small'>(2.3)</span></td><td>2.3%</td><td>0.12</td><td>56.4%</td></tr><tr><td>VTEB, 2018-26</td><td>0.22 <span class='small'>(5.6)</span></td><td>3.6%</td><td>0.19</td><td>57.3%</td></tr></tbody>
+  </table>
+  <p class="read"><b>Out-of-sample R²</b> (slope fitted on 2008-17, applied unchanged to 2018-26, versus the training mean): <b>2.4%</b> for MUB and <b>3.7%</b> for VTEB. For daily returns, where out-of-sample R² is usually well below 1%, this is large. The signal calls the next day's direction correctly 54-57% of the time.</p>
 
   <h2>Signal construction</h2>
   <ol class="steps">
@@ -161,6 +181,8 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
     <li><b>Reinvestment calendar.</b> A 0.5 long tilt over the first five business days of each month, when coupon and redemption cash is reinvested.</li>
     <li><b>Execution.</b> Signal at the close, trade at the next open. Each ETF is hedged with IEF at its rolling one-year beta. Costs of 1bp per side on the muni ETF and 0.5bp on IEF. A no-trade band limits turnover to about 60 position units a year.</li>
   </ol>
+  <div class="eq">position<sub>t</sub> = clip( 1.0&middot;<i>T</i><sub>t</sub> + 0.3&middot;<i>E</i><sub>t</sub> + 0.5&middot;<i>F</i><sub>t</sub> + 0.5&middot;<i>M</i><sub>t</sub>, &plusmn;2.5 ), &nbsp; updated only if the change exceeds 0.75</div>
+  <p class="read"><i>T</i>, <i>E</i>: EWMA (1-day half-life) of IEF and SPY returns over trailing 60-day volatility. <i>F</i>: 60-day sum of hedged muni returns over its volatility. <i>M</i>: 1 in the first five business days of a month, else 0. The position is held in MUB and VTEB, each hedged with IEF at its rolling 250-day beta.</p>
   <p class="small">The specification was selected from 32 variants on 2008-2017 data only. Across all 32, the median 2018-2026 Sharpe ratio is 1.73.</p>
 
   <h2>Performance</h2>
@@ -211,6 +233,45 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
   </div>
   <p class="small">No losing year. The weakest years were 2018 and 2024.</p>
 
+  <h3>Trading diagnostics (daily, 2008-2026)</h3>
+  <table>
+    <thead><tr><th></th><th>MUB</th><th>VTEB</th></tr></thead>
+    <tbody class="num"><tr><td>Sharpe ratio before costs</td><td>1.86</td><td>2.16</td></tr><tr><td>Sharpe ratio after costs</td><td>1.67</td><td>1.94</td></tr><tr><td>Costs as share of gross P&amp;L</td><td>11%</td><td>10%</td></tr><tr><td>Time with a position</td><td>97%</td><td>96%</td></tr><tr><td>Time long / short</td><td>68% / 30%</td><td>65% / 30%</td></tr><tr><td>Position changes per year</td><td>55</td><td>56</td></tr><tr><td>Average holding period (days)</td><td>4.6</td><td>4.5</td></tr><tr><td>Winning days</td><td>56%</td><td>58%</td></tr><tr><td>Winning weeks</td><td>62%</td><td>64%</td></tr><tr><td>Average win / average loss</td><td>1.26</td><td>1.29</td></tr></tbody>
+  </table>
+  <p class="read"><b>Reading:</b> the edge is many small, slightly-better-than-even bets: a 56-58% daily hit rate, wins about 1.3 times the size of losses, and positions held for about four to five days. Costs take about a tenth of gross P&amp;L.</p>
+
+  <h2>Is the Sharpe ratio real?</h2>
+  <table>
+    <thead><tr><th>Test (daily returns, 2008-2026)</th><th>Result</th></tr></thead>
+    <tbody class="num">
+      <tr><td>Sharpe ratio (daily, annualised)</td><td>1.83</td></tr>
+      <tr><td>Standard error, adjusted for skew (7.7) and fat tails (Mertens 2002)</td><td>0.22</td></tr>
+      <tr><td>t-statistic</td><td>8.1</td></tr>
+      <tr><td>95% interval, block bootstrap (20-day blocks, 2,000 draws)</td><td>1.44 to 2.44</td></tr>
+      <tr><td>Deflated Sharpe: hurdle for the best of 32 specifications under no skill</td><td>0.59</td></tr>
+      <tr><td>Probability the true Sharpe exceeds that hurdle (Bailey and L&oacute;pez de Prado 2014)</td><td>&gt; 99.9%</td></tr>
+    </tbody>
+  </table>
+  <p class="read"><b>Reading:</b> even the bottom of the bootstrap interval is a Sharpe ratio of 1.4. Selecting the best of 32 specifications raises the bar a lucky strategy would clear to 0.59; the result clears it comfortably. (The 2.01 headline uses weekly returns at a 10% volatility target; these tests use daily returns in risk units, which give 1.83.)</p>
+
+  <h3>Is it just a hidden factor bet?</h3>
+  <p>Regress the strategy's daily returns on the main things it could be secretly exposed to: Treasuries, equities, the muni market itself, and investment-grade and high-yield credit.</p>
+  <table>
+    <thead><tr><th>Exposure</th><th>Newey-West t-stat</th></tr></thead>
+    <tbody class="num"><tr><td>IEF</td><td>0.34</td></tr><tr><td>SPY</td><td>-1.26</td></tr><tr><td>MUB</td><td>-0.90</td></tr><tr><td>LQD</td><td>-1.50</td></tr><tr><td>HYG</td><td>0.02</td></tr>
+      <tr><td><b>Alpha (intercept)</b></td><td><b>7.4</b></td></tr>
+      <tr><td>R²</td><td>4.2%</td></tr>
+    </tbody>
+  </table>
+  <p class="read"><b>Reading:</b> no factor loading is significant and the factors explain 4.2% of the variance. The return is alpha with respect to rates, equities, munis and credit.</p>
+
+  <h3>Performance by Treasury-volatility regime</h3>
+  <table>
+    <thead><tr><th>IEF volatility tercile</th><th>Average daily IEF vol</th><th>Sharpe ratio</th><th>Share of total P&amp;L</th></tr></thead>
+    <tbody class="num"><tr><td>Low</td><td>28bp</td><td>2.47</td><td>42%</td></tr><tr><td>Medium</td><td>38bp</td><td>1.70</td><td>28%</td></tr><tr><td>High</td><td>59bp</td><td>1.43</td><td>30%</td></tr></tbody>
+  </table>
+  <p class="read"><b>Reading:</b> the strategy works in every volatility regime. Because positions are scaled by volatility, quiet markets do not starve it; the risk-adjusted return is actually highest when Treasury volatility is low.</p>
+
   <h2>Robustness</h2>
   <table>
     <thead><tr><th>Daily, net of costs</th><th>2008-17</th><th>2018-26</th></tr></thead>
@@ -230,7 +291,7 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
   <ul>
     <li><b>Capacity.</b> MUB and VTEB trade about $650m a day combined. At 10% volatility the strategy runs 2-3x gross notional, which points to capacity in the tens to low hundreds of millions.</li>
     <li><b>Execution.</b> Fills assume the official opening print and fixed costs per side; opening auctions can be noisier in stressed markets.</li>
-    <li><b>Regime.</b> The P&amp;L scales with the size of Treasury moves, so returns will be thinner in low-volatility rate regimes.</li>
+    <li><b>Fat tails.</b> Daily returns have skew of 7.7 and very high kurtosis: the ten best days (led by March 2020 and November 2016, two muni dislocations) make up 19% of total P&amp;L. Removing them leaves the daily Sharpe ratio at 1.84, because those days also carry much of the volatility.</li>
     <li><b>Structure.</b> Wider adoption of intraday ETF arbitrage against Treasury futures would compress the lag.</li>
   </ul>
 
