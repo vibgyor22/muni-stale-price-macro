@@ -1,5 +1,3 @@
 __pycache__/
 *.pyc
-data/processed/
-data/raw/ghcn/
-data/raw/*_ohlc.parquet
+data/

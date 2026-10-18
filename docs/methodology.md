@@ -1,23 +1,24 @@
 # Methodology notes
 
 ## Timing and look-ahead control
-- Every signal uses only information public at the decision time. EIA weekly data are applied the week after the reference week; storage and inventory normals use prior years only.
-- Muni sleeve: signals computed at the close of day t, positions traded at the open of day t+1. P&L is split into the overnight segment (old position) and the session segment (new position).
-- All volatility scalings, hedge betas and z-scores use trailing windows shifted by one period.
+- Signals are computed at the close of day t and positions are traded at the open of day t+1. P&L is split into the overnight segment (close to open, old position) and the session segment (open to close, new position).
+- Volatility scalings, hedge betas and z-scores all use trailing windows shifted by one day.
+- The Treasury hedge ratio is the rolling 250-day beta of each muni ETF to IEF, known at the time of the trade.
 
 ## Transaction costs
-- Muni ETFs: 1bp per side (MUB quoted spread is about 0.9bp, VTEB about 2bp). IEF hedge: 0.5bp per side.
-- Energy futures: 3bp per side on outright positions; one tick per calendar-spread trade.
-- Equity/bond rebalancing sleeve: 1bp per side.
+- Muni ETFs: 1bp per side (MUB quoted spread is about 0.9bp, VTEB about 2bp).
+- IEF hedge: 0.5bp per side, times the absolute hedge ratio.
 - Results are also reported at 2x and 3x costs.
 
-## Data cleaning
-- **Continuous futures.** Yahoo's front-month series splice contracts without adjustment. Daily returns are rebuilt from the session return (open to close, always one contract) plus the overnight gap, which is dropped when it is an outlier relative to its own history (the signature of a contract switch).
-- **EIA futures curves.** EIA reports NYMEX contracts 1-4 by position. Each expiry is located with the exchange calendar rule, confirmed in the data, and returns are stitched for the contract actually held. Days within two sessions of an expiry are excluded from calendar-spread P&L.
-- **Weather.** NOAA GHCN-Daily airport stations, quality-flagged observations only; these are available the next morning.
-
 ## Specification choice
-- The muni sleeve's specification was selected on 2008-2017 data only from a 32-variant grid (`python -m src.select_spec`); 2018-2026 is reported as out-of-sample.
+- The specification was selected on 2008-2017 data only from a 32-variant grid (`python -m src.select_spec`): equity weight {0, 0.3}, flow weight {0, 0.5}, calendar weight {0, 0.5}, half-life {1, 2, 3, 5}. 2018-2026 is reported as out of sample.
 
-## Portfolio construction
-- Each sleeve's weekly return is normalised by its trailing two-year volatility. The book weights the muni sleeve at 50% of risk and the four diversifiers at 12.5% each, then targets 10% annualised volatility using trailing one-year realised volatility.
+## Reported returns
+- Daily P&L is in risk units (position times hedged return over trailing volatility). Weekly sums are scaled to a 10% annualised volatility target using trailing one-year realised volatility, so the scaling is ex ante.
+
+## Statistics (`src/stats_pack.py`)
+- Distributed-lag (Dimson) regressions of muni ETF returns on IEF returns at lags 0-5, Newey-West standard errors with 5 lags, Wald test that lags 1-5 sum to zero.
+- Predictive regressions of next-day hedged muni returns on the signal, by period, with Spearman IC and hit rate. Out-of-sample R² follows Campbell and Thompson (2008): coefficients fitted on 2008-17, benchmark is the 2008-17 mean.
+- Sharpe ratio standard error from Mertens (2002), allowing for skew and kurtosis. Moving-block bootstrap with 20-day blocks. Deflated Sharpe ratio from Bailey and López de Prado (2014), using the dispersion of the 32 grid Sharpe ratios.
+- Factor regression of daily strategy returns on IEF, SPY, MUB, LQD and HYG returns.
+- Regime split by terciles of trailing 60-day IEF volatility.

@@ -1,4 +1,4 @@
-"""Combine sleeves into one book and compute statistics."""
+"""Sharpe ratio, t-stat and drawdown tables."""
 import numpy as np
 import pandas as pd
 
@@ -31,12 +31,3 @@ def split_table(series_dict, freq, splits):
                     "max DD @10% vol": max_drawdown(s, freq)})
         rows[name] = row
     return pd.DataFrame(rows).T
-
-
-def combine(weekly, weights):
-    """Risk-normalise each weekly sleeve by its trailing 2-year vol, then weight."""
-    Z = (weekly / weekly.rolling(104, min_periods=26).std().shift(1)).clip(-6, 6)
-    w = pd.Series(weights)
-    num = (Z[w.index] * w).sum(axis=1, min_count=1)
-    den = (Z[w.index].notna() * w).sum(axis=1)
-    return (num / den).rename("book"), Z

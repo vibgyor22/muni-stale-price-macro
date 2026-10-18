@@ -7,17 +7,14 @@ import pandas as pd
 
 from . import config as C
 from . import report as RP
-from .portfolio import combine
 
 BG, TEXT, MUTED, LINE, ACCENT, SAGE, RED = "#0c0c0b", "#e8e4dc", "#9a968e", "#2a2926", "#b8a88a", "#8a9a82", "#c27a6b"
 
 
 def main():
-    w = pd.read_csv(C.RESULTS / "weekly_sleeves.csv", index_col=0, parse_dates=True)
-    book, _ = combine(w, C.SLEEVE_WEIGHTS)
-    b = RP.vol_target(book)
+    w = pd.read_csv(C.RESULTS / "weekly_returns.csv", index_col=0, parse_dates=True)
     m = RP.vol_target(w["muni"].dropna())
-    eq_b, eq_m = (1 + b).cumprod(), (1 + m).cumprod()
+    eq_m = (1 + m).cumprod()
     dd = eq_m / eq_m.cummax() - 1
 
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10, "text.color": TEXT,

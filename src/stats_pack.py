@@ -19,7 +19,7 @@ from scipy import stats as st
 
 from . import config as C
 from .data import etf_returns
-from .sleeves import muni
+from . import muni
 
 HAC = dict(cov_type="HAC", cov_kwds={"maxlags": 5})
 
@@ -27,9 +27,8 @@ HAC = dict(cov_type="HAC", cov_kwds={"maxlags": 5})
 def factors():
     p = C.RAW / "factor_ohlc.parquet"
     if not p.exists():
-        import yfinance as yf
-        d = yf.download(["HYG", "LQD", "TLT", "SHY"], start="2007-01-01", auto_adjust=True, progress=False)
-        d[["Close"]].to_parquet(p)
+        from .fetch import yahoo
+        yahoo()
     c = pd.read_parquet(p)["Close"]
     return np.log(c).diff()
 

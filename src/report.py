@@ -58,17 +58,14 @@ def metrics_table(r, splits, freq=52):
     return out
 
 
-def tearsheet(r, sleeves, path, title, test_start):
+def tearsheet(r, path, title, test_start):
     """Equity curve (log), underwater curve and rolling 1-year Sharpe."""
     eq = (1 + r).cumprod()
     dd = eq / eq.cummax() - 1
     roll = r.rolling(52).mean() / r.rolling(52).std() * np.sqrt(52)
     fig, axs = plt.subplots(3, 1, figsize=(10.5, 8.2), sharex=True, gridspec_kw={"height_ratios": [3, 1.1, 1.3]})
     ax = axs[0]
-    for k, (s, col) in sleeves.items():
-        e = (1 + s).cumprod()
-        ax.plot(e, color=col, lw=0.9, alpha=0.75, label=k)
-    ax.plot(eq, color=INK, lw=2.2, label="Book")
+    ax.plot(eq, color=BLUE, lw=2.0, label="Muni lag strategy, net of costs")
     ax.set_yscale("log")
     ax.set_ylabel("growth of $1 (log), 10% vol target")
     ax.axvspan(pd.Timestamp(test_start), eq.index[-1], color="#f3f4f6", lw=0, zorder=0)
@@ -125,27 +122,11 @@ def robustness_bars(table, path):
     ax.invert_yaxis()
     ax.axvline(0, color=MUTED, lw=0.8)
     ax.set_xlabel("Sharpe ratio (daily, net of costs)")
-    ax.set_title("Slow munis: robustness checks (the placebo should be ~0)", loc="left", fontsize=11, fontweight="bold")
+    ax.set_title("Robustness checks (the placebo should be ~0)", loc="left", fontsize=11, fontweight="bold")
     ax.legend(frameon=True, facecolor="white", edgecolor=GRID, loc="lower left", bbox_to_anchor=(0.62, 0.22))
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
     ax.grid(axis="x", color=GRID, lw=0.6)
-    fig.tight_layout()
-    fig.savefig(path, dpi=150)
-    plt.close(fig)
-
-
-def corr_heatmap(Z, path):
-    c = Z.corr()
-    fig, ax = plt.subplots(figsize=(5.6, 4.6))
-    ax.imshow(c.values, cmap="RdBu_r", vmin=-1, vmax=1)
-    for i in range(len(c)):
-        for j in range(len(c)):
-            ax.text(j, i, f"{c.values[i, j]:.2f}", ha="center", va="center", fontsize=8.5, color=INK)
-    lab = [x.replace("_", "\n") for x in c.columns]
-    ax.set_xticks(range(len(c)), lab, fontsize=8)
-    ax.set_yticks(range(len(c)), lab, fontsize=8)
-    ax.set_title("Sleeve correlations (weekly)", loc="left", fontsize=11, fontweight="bold")
     fig.tight_layout()
     fig.savefig(path, dpi=150)
     plt.close(fig)

@@ -1,16 +1,16 @@
-"""Sleeve M (flagship, rates): slow munis.
+"""The muni lag strategy.
 
 Economics
     Municipal bonds trade rarely, are held by tax-motivated retail investors, and are
     marked by pricing vendors ("evaluated pricing") rather than by continuous trading.
     Muni ETF market makers anchor to those marks. So when Treasuries move, muni ETFs
-    price in only about a third of the move that day and the rest over the next few
-    days. The same slowness makes muni fund flows persistent (outflows beget
+    price in roughly 60-70% of the move that day and the rest over the next two to
+    four days. The same slowness makes muni fund flows persistent (outflows beget
     outflows) and makes the start-of-month reinvestment of coupons and redemptions
     a predictable demand shock.
 
 Signal (all inputs known at the close of day t; traded at the open of day t+1)
-    catch-up   EWMA (half-life 3d) of IEF returns in vol units -> long munis after Treasury rallies
+    catch-up   EWMA (half-life 1d) of IEF returns in vol units -> long munis after Treasury rallies
     risk       same for SPY, smaller weight (credit/risk sentiment also reaches munis late)
     calendar   +0.5 on the first five business days of each month
     flow       60-day momentum of the hedged muni residual
@@ -20,8 +20,8 @@ Treasury direction itself is not the bet. A no-trade band cuts turnover.
 import numpy as np
 import pandas as pd
 
-from .. import config as C
-from ..data import etf_returns
+from . import config as C
+from .data import etf_returns
 
 
 def _band(target, width):

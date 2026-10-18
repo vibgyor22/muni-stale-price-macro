@@ -1,7 +1,7 @@
-"""Train-only specification grid for the muni sleeve (python -m src.select_spec)."""
+"""Train-only specification grid for the muni strategy (python -m src.select_spec)."""
 import itertools, pandas as pd, numpy as np
-from .sleeves import muni
-from .portfolio import stats
+from . import muni
+from .metrics import stats
 rows=[]
 for wr,wf,wc,hl in itertools.product([0,0.3],[0,0.5],[0,0.5],[1,2,3,5]):
     p=muni.run(params=dict(w_risk=wr,w_flow=wf,w_calendar=wc,halflife=hl))
