@@ -59,6 +59,34 @@ ol.steps{padding-left:20px} ol.steps li{margin-bottom:10px}
 ul{padding-left:20px} li{margin-bottom:8px}
 footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 @media (max-width:640px){ .years{grid-template-columns:1fr} h1{margin-top:48px} th,td{padding:7px 4px;font-size:14px} }
+
+.flow{margin:22px 0 8px;border-top:1px solid var(--line)}
+.frow{display:grid;grid-template-columns:1fr 18px 1.15fr 18px 70px;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.frow .src{color:var(--muted)}
+.frow .sig{color:var(--text)}
+.frow .w{text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
+.frow .arr{color:var(--faint);text-align:center}
+.frow.head{font-size:13px;color:var(--faint);padding:8px 0}
+.frow.head .w{color:var(--faint)}
+.fout{margin-top:14px;padding:14px 16px;border:1px solid var(--accent);border-radius:4px;font-size:14.5px}
+.fout b{font-weight:600}
+.hyp td:nth-child(2),.hyp td:nth-child(3),.hyp th:nth-child(2),.hyp th:nth-child(3){text-align:left}
+.hyp td:nth-child(3){color:var(--muted)}
+.hyp td:first-child{color:var(--accent);width:32px}
+.toc{font-size:14px;color:var(--muted);margin:26px 0 0;padding-left:20px}
+.toc li{margin-bottom:4px}
+@media (max-width:640px){ .frow{grid-template-columns:1fr;gap:2px} .frow .arr{display:none} .frow .w{text-align:left} .frow.head{display:none} .hyp td:nth-child(3),.hyp th:nth-child(3){display:none} }
+
+.flowsvg text{font:13px var(--sans)}
+.flowsvg .fh{fill:var(--faint);font-size:12.5px}
+.flowsvg .t1{fill:var(--text)}
+.flowsvg .t2{fill:var(--muted);font-size:12.5px}
+.flowsvg .wt{fill:var(--accent);font-size:12.5px}
+.flowsvg .bx{fill:var(--raised);stroke:var(--line)}
+.flowsvg .bx.strong{stroke:var(--accent)}
+.flowsvg .ar{stroke:#5c5a55;stroke-width:1.3}
+.mobileonly{display:none}
+@media (max-width:640px){ .flowfig{display:none} .mobileonly{display:block} figure svg:not(.flowsvg) text{font-size:21px} }
 </style>
 </head>
 <body>
@@ -68,6 +96,88 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
   <h1>Muni bond ETFs are slow to price Treasury moves</h1>
   <p class="lede">When Treasury yields move, municipal-bond ETFs (MUB, VTEB) price in about 70% of the move the same day and the rest over the next two to four days. I buy the muni ETF against a Treasury hedge after Treasuries rally, and sell it after they fall.</p>
   <p class="lede">From 2018 to 2026, out of sample and after trading costs, this earned a Sharpe ratio of 1.9. Combined with four smaller commodity and flow strategies, the portfolio's Sharpe ratio was 2.25.</p>
+  <ol class="toc">
+    <li><a href="#idea">The idea</a></li>
+    <li><a href="#hypotheses">Five hypotheses</a></li>
+    <li><a href="#design">How the pieces fit</a></li>
+    <li><a href="#evidence">Evidence for the muni lag</a></li>
+    <li><a href="#trade">How the muni trade works</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#checks">Checks</a></li>
+    <li><a href="#limits">Limits</a></li>
+    <li><a href="#data">Data and code</a></li>
+  </ol>
+
+  <h2 id="idea">1. The idea</h2>
+  <p>Prices move late where trading is slow, where information is easy to miss, or where some investors are forced to trade on a schedule. Each of those leaves a predictable price move that a patient trader can take.</p>
+  <p>Municipal bonds are the clearest case. Most go weeks without trading. Their prices come from vendor models that update from sparse trades, and muni ETF market makers anchor to those prices. The owners are mostly retail investors and funds buying for the tax exemption, and they rebalance slowly. Prices that update slowly, held by investors who trade slowly, should produce a lag behind Treasuries.</p>
+  <p>The same logic applies, more weakly, in energy markets (storage follows a calendar; weather hides the useful part of inventory data) and in pension funds' month-end rebalancing.</p>
+
+  <h2 id="hypotheses">2. Five hypotheses</h2>
+  <p>Each strategy tests one hypothesis with a clear economic reason. The last column is the out-of-sample result, 2018-2026, after costs.</p>
+  <table class="hyp">
+    <thead><tr><th></th><th>Hypothesis</th><th>Why it should hold</th><th>Sharpe 2018-26</th></tr></thead>
+    <tbody>
+      <tr><td>H1</td><td><b>Muni ETFs catch up to Treasury and stock moves over several days</b></td><td>Vendor-model pricing, slow tax-driven owners, persistent fund flows, start-of-month reinvestment of coupons</td><td class="num"><b>1.86</b></td></tr>
+      <tr><td>H2</td><td>Energy calendar spreads earn a seasonal premium</td><td>Storage builds and draws on a calendar (heating, driving, refinery maintenance), so hedging demand is seasonal</td><td class="num">0.72</td></tr>
+      <tr><td>H3</td><td>Month-end pension rebalancing moves stocks and bonds predictably</td><td>About $20tn sits in fixed 60/40 mandates that must rebalance on a schedule</td><td class="num">0.62</td></tr>
+      <tr><td>H4</td><td>Gas prices under-react to the non-weather part of storage</td><td>About 80% of each weekly storage change is weather; the rest is small and easy to miss</td><td class="num">0.48</td></tr>
+      <tr><td>H5</td><td>Oil prices under-react to sustained crude inventory surprises</td><td>Single weeks are noisy, so a run of surprises is under-weighted</td><td class="num">0.19</td></tr>
+    </tbody>
+  </table>
+  <p class="small">H1 is the core of the portfolio. H5 worked until 2021 and has faded since; it keeps a small weight.</p>
+
+  <h2 id="design">3. How the pieces fit</h2>
+  <p>Each hypothesis becomes one strategy. Each strategy is scaled to the same risk, then weighted into one portfolio.</p>
+</div>
+<div class="wide">
+  <figure class="flowfig">
+<svg class="flowsvg" viewBox="0 0 900 440" role="img" aria-label="Flowchart: five data sources feed five strategies, which combine into one portfolio scaled to 10% volatility">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5c5a55"/></marker></defs>
+<text x="0" y="14" class="fh">Data</text><text x="320" y="14" class="fh">Strategy (risk weight)</text><text x="700" y="14" class="fh">Portfolio</text>
+<rect x="0" y="26" width="250" height="52" rx="4" class="bx"/><text x="14" y="48" class="t1">Daily prices</text><text x="14" y="66" class="t2">MUB, VTEB, IEF, SPY</text>
+<line x1="252" y1="52" x2="316" y2="52" class="ar" marker-end="url(#ah)"/>
+<rect x="320" y="26" width="270" height="52" rx="4" class="bx strong"/><text x="334" y="48" class="t1">H1 Muni catch-up</text><text x="334" y="66" class="t2">hedged with IEF</text>
+<path d="M592,52 C650,52 640,150 696,150" class="ar" fill="none" marker-end="url(#ah)"/>
+<rect x="0" y="110" width="250" height="52" rx="4" class="bx"/><text x="14" y="132" class="t1">NYMEX futures curves</text><text x="14" y="150" class="t2">contracts 1-4 (EIA)</text>
+<line x1="252" y1="136" x2="316" y2="136" class="ar" marker-end="url(#ah)"/>
+<rect x="320" y="110" width="270" height="52" rx="4" class="bx"/><text x="334" y="132" class="t1">H2 Seasonal spreads</text><text x="334" y="150" class="t2">oil, gas, heating oil, gasoline</text>
+<path d="M592,136 C650,136 640,178 696,178" class="ar" fill="none" marker-end="url(#ah)"/>
+<rect x="0" y="194" width="250" height="52" rx="4" class="bx"/><text x="14" y="216" class="t1">Daily prices</text><text x="14" y="234" class="t2">SPY, IEF</text>
+<line x1="252" y1="220" x2="316" y2="220" class="ar" marker-end="url(#ah)"/>
+<rect x="320" y="194" width="270" height="52" rx="4" class="bx"/><text x="334" y="216" class="t1">H3 Month-end rebalancing</text><text x="334" y="234" class="t2">60/40 drift</text>
+<path d="M592,220 C650,220 640,206 696,206" class="ar" fill="none" marker-end="url(#ah)"/>
+<rect x="0" y="278" width="250" height="52" rx="4" class="bx"/><text x="14" y="300" class="t1">37 NOAA weather stations</text><text x="14" y="318" class="t2">+ EIA gas storage</text>
+<line x1="252" y1="304" x2="316" y2="304" class="ar" marker-end="url(#ah)"/>
+<rect x="320" y="278" width="270" height="52" rx="4" class="bx"/><text x="334" y="300" class="t1">H4 Gas storage</text><text x="334" y="318" class="t2">weather removed</text>
+<path d="M592,304 C650,304 640,234 696,234" class="ar" fill="none" marker-end="url(#ah)"/>
+<rect x="0" y="362" width="250" height="52" rx="4" class="bx"/><text x="14" y="384" class="t1">EIA weekly</text><text x="14" y="402" class="t2">crude oil stocks</text>
+<line x1="252" y1="388" x2="316" y2="388" class="ar" marker-end="url(#ah)"/>
+<rect x="320" y="362" width="270" height="52" rx="4" class="bx"/><text x="334" y="384" class="t1">H5 Crude inventory</text><text x="334" y="402" class="t2">4-week surprise</text>
+<path d="M592,388 C650,388 640,262 696,262" class="ar" fill="none" marker-end="url(#ah)"/>
+<rect x="700" y="108" width="200" height="200" rx="4" class="bx strong"/><text x="716" y="134" class="t1" style="font-weight:600">Portfolio</text><text x="578" y="57" class="wt" text-anchor="end">50%</text><text x="578" y="141" class="wt" text-anchor="end">12.5%</text><text x="578" y="225" class="wt" text-anchor="end">12.5%</text><text x="578" y="309" class="wt" text-anchor="end">12.5%</text><text x="578" y="393" class="wt" text-anchor="end">12.5%</text>
+<text x="716" y="160" class="t1">Risk-match each</text>
+<text x="716" y="180" class="t1">strategy, then weight</text>
+<text x="716" y="216" class="t2">Scale to 10% annual</text>
+<text x="716" y="236" class="t2">volatility using past</text>
+<text x="716" y="256" class="t2">data only</text>
+</svg>
+    <figcaption>Five data sources feed five strategies. Correlations between strategies are all below 0.1, so combining them raises the Sharpe ratio above any single one.</figcaption>
+  </figure>
+</div>
+<div class="col">
+  <div class="flow mobileonly" role="figure" aria-label="Diagram: data source, signal and portfolio weight for each of the five strategies, combined into one portfolio at a 10% volatility target">
+    <div class="frow head"><span>Data</span><span></span><span>Signal</span><span></span><span class="w">Weight</span></div>
+    <div class="frow"><span class="src">Daily prices of MUB, VTEB, IEF, SPY</span><span class="arr">&rsaquo;</span><span class="sig">H1 Muni catch-up, hedged with IEF</span><span class="arr">&rsaquo;</span><span class="w">50%</span></div>
+    <div class="frow"><span class="src">NYMEX futures curves, contracts 1-4 (EIA)</span><span class="arr">&rsaquo;</span><span class="sig">H2 Seasonal calendar spreads</span><span class="arr">&rsaquo;</span><span class="w">12.5%</span></div>
+    <div class="frow"><span class="src">Daily prices of SPY, IEF</span><span class="arr">&rsaquo;</span><span class="sig">H3 Month-end rebalancing</span><span class="arr">&rsaquo;</span><span class="w">12.5%</span></div>
+    <div class="frow"><span class="src">37 NOAA weather stations, EIA gas storage</span><span class="arr">&rsaquo;</span><span class="sig">H4 Gas storage with weather removed</span><span class="arr">&rsaquo;</span><span class="w">12.5%</span></div>
+    <div class="frow"><span class="src">EIA weekly crude stocks</span><span class="arr">&rsaquo;</span><span class="sig">H5 Crude inventory surprises</span><span class="arr">&rsaquo;</span><span class="w">12.5%</span></div>
+    <div class="fout"><b>Portfolio:</b> weights applied to risk-matched strategies, then scaled to 10% annual volatility using past data only. The five strategies are almost uncorrelated (all correlations below 0.1), so the portfolio's Sharpe ratio is higher than any single one.</div>
+  </div>
+
+  <h2 id="evidence">4. Evidence for the muni lag</h2>
+  <p>After a one-standard-deviation move in Treasuries, muni ETFs keep moving in the same direction for two to four more days.</p>
 </div>
 
 <div class="wide">
@@ -91,7 +201,24 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
 </div>
 
 <div class="col">
-  <h2>Results</h2>
+  <table>
+    <thead><tr><th>ETF</th><th>Same-day move vs Treasuries</th><th>10-day move vs Treasuries</th><th>Share priced on day one</th></tr></thead>
+    <tbody class="num">
+      <tr><td>MUB</td><td>0.30</td><td>0.41</td><td>73%</td></tr>
+      <tr><td>VTEB</td><td>0.35</td><td>0.54</td><td>65%</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Move vs Treasuries is the regression beta of the muni ETF on IEF, measured over 1 day and over 10 days, 2008-2026.</p>
+
+  <h2 id="trade">5. How the muni trade works</h2>
+  <ol class="steps">
+    <li>Each evening, measure how far Treasuries (IEF) have moved over the last few days, in units of their normal daily move.</li>
+    <li>If Treasuries rallied, buy MUB and VTEB; if they sold off, sell them. Hedge each with IEF so the position is the muni-versus-Treasury gap, not a bet on rates.</li>
+    <li>Add three smaller inputs: recent stock-market moves (they reach munis late too), the 60-day trend in muni-versus-Treasury performance (fund flows persist), and a small long position in the first five business days of each month (coupon and redemption cash gets reinvested).</li>
+    <li>Trade at the next morning's open. Charge 1bp per side on the muni ETF and 0.5bp on the hedge. Skip trades that would change the position only slightly.</li>
+  </ol>
+
+  <h2 id="results">6. Results</h2>
   <p>Weekly returns after trading costs. The portfolio is scaled to 10% annual volatility using only past data, so returns grow or shrink in proportion to the risk taken. Every design decision used 2008-2017; 2018-2026 was held back as the test.</p>
   <table>
     <thead><tr><th>Portfolio</th><th>2008-17</th><th>2018-26 (test)</th><th>2008-26</th></tr></thead>
@@ -109,7 +236,7 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
 
 <div class="wide">
   <figure>
-    <img src="img/equity_dark.png" alt="Growth of one dollar for the full portfolio and the muni strategy alone, 2008 to 2026, on a log scale, with drawdowns below. The worst drawdown is about 8.6%." loading="lazy">
+    <img src="img/equity_dark.png" alt="Growth of one dollar for the full portfolio and the muni strategy alone, 2008 to 2026, on a log scale, with drawdowns below. The worst drawdown is about 8.6%.">
     <figcaption>Growth of $1 at 10% volatility (log scale) and drawdowns. Shaded area: the 2018-2026 test period.</figcaption>
   </figure>
 </div>
@@ -148,30 +275,21 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
   </div>
   <p class="small">No losing calendar year. The strongest years (2010, 2016, 2022) had large Treasury moves.</p>
 
-  <h2>How the trade works</h2>
-  <ol class="steps">
-    <li>Each evening, measure how far Treasuries (IEF) have moved over the last few days, in units of their normal daily move.</li>
-    <li>If Treasuries rallied, buy MUB and VTEB; if they sold off, sell them. Hedge each with IEF so the position is the muni-versus-Treasury gap, not a bet on rates.</li>
-    <li>Add three smaller inputs: recent stock-market moves (they reach munis late too), the 60-day trend in muni-versus-Treasury performance (fund flows persist), and a small long position in the first five business days of each month (coupon and redemption cash gets reinvested).</li>
-    <li>Trade at the next morning's open. Charge 1bp per side on the muni ETF and 0.5bp on the hedge. Skip trades that would change the position only slightly.</li>
-  </ol>
-
-  <h2>Why the lag exists</h2>
-  <p>Most municipal bonds go weeks without trading. Their prices come from vendor models that update from sparse trades, and muni ETF market makers anchor to those prices. The owners are mostly retail investors and funds buying for the tax exemption, who rebalance slowly. Prices that update slowly, held by investors who trade slowly, produce a predictable lag.</p>
-
-  <h2>The other four strategies</h2>
-  <p>Each takes 12.5% of the portfolio's risk. Their returns are almost uncorrelated with the muni strategy and with each other (all correlations below 0.1), which is why the portfolio's Sharpe ratio is higher than any single strategy's.</p>
+  <h3>Each strategy on its own (Sharpe ratio, weekly, after costs)</h3>
   <table>
-    <thead><tr><th>Strategy</th><th style="text-align:left">What it trades</th><th>Sharpe 2018-26</th></tr></thead>
-    <tbody>
-      <tr><td>Energy seasonal spreads</td><td class="txt">Calendar spreads in oil, gas, heating oil and gasoline futures, which follow the seasonal cycle of storage</td><td class="num">0.72</td></tr>
-      <tr><td>Pension rebalancing</td><td class="txt">Month-end stock and bond flows from funds that hold fixed 60/40 weights</td><td class="num">0.62</td></tr>
-      <tr><td>Gas storage, weather removed</td><td class="txt">Weekly gas storage changes minus the part explained by weather at 37 US weather stations</td><td class="num">0.48</td></tr>
-      <tr><td>Crude inventory</td><td class="txt">Four-week run of US crude stock surprises</td><td class="num">0.19</td></tr>
+    <thead><tr><th>Strategy</th><th>2008-17</th><th>2018-26 (test)</th><th>2008-26</th></tr></thead>
+    <tbody class="num">
+      <tr><td>H1 Muni catch-up</td><td>2.01</td><td class="oos">1.86</td><td>1.90</td></tr>
+      <tr><td>H2 Energy seasonal spreads</td><td>0.78</td><td class="oos">0.72</td><td>0.75</td></tr>
+      <tr><td>H3 Month-end rebalancing</td><td>0.92</td><td class="oos">0.62</td><td>0.79</td></tr>
+      <tr><td>H4 Gas storage, weather removed</td><td>-0.44</td><td class="oos">0.48</td><td>0.28</td></tr>
+      <tr><td>H5 Crude inventory</td><td>0.81</td><td class="oos">0.19</td><td>0.50</td></tr>
+      <tr><td><b>Portfolio</b></td><td><b>2.56</b></td><td class="oos">2.25</td><td><b>2.40</b></td></tr>
     </tbody>
   </table>
+  <p class="small">H4 starts in 2016 because the gas storage series begins in 2010 and the weather model needs history to train. H2 ends in April 2024 when the futures-curve data stops.</p>
 
-  <h2>Checks on the muni strategy</h2>
+  <h2 id="checks">7. Checks</h2>
   <p>The settings were picked from 32 variants using 2008-2017 data only. Across all 32, the median Sharpe ratio in 2018-2026 was 1.73.</p>
   <table>
     <thead><tr><th>Muni strategy, daily, after costs</th><th>2008-17</th><th>2018-26</th></tr></thead>
@@ -186,7 +304,7 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
   </table>
   <p class="small">The placebo uses the same model on unrelated Treasury moves. It earns nothing, which is what a real effect should show.</p>
 
-  <h2>Limits</h2>
+  <h2 id="limits">8. Limits</h2>
   <ul>
     <li><b>Size.</b> MUB and VTEB trade about $650m a day combined. At 10% volatility the strategy holds 2-3 times its capital in gross positions, so it suits tens to low hundreds of millions, not billions.</li>
     <li><b>Concentration.</b> Half the risk is in one strategy. With equal weights across all five, the 2018-2026 Sharpe ratio is 1.77.</li>
@@ -194,7 +312,7 @@ footer{margin:80px 0 50px;padding-top:20px;border-top:1px solid var(--line);font
     <li><b>Data.</b> The US Energy Information Administration stopped publishing its futures-curve data in April 2024, so the energy spread strategy ends there.</li>
   </ul>
 
-  <h2>Data and code</h2>
+  <h2 id="data">9. Data and code</h2>
   <p>All data is free and public: Yahoo Finance for ETF and futures prices, the US Energy Information Administration for futures curves, crude stocks and gas storage, and NOAA for weather. The full analysis reruns from scratch with two commands. Code, methodology and every table are on <a href="https://github.com/vibgyor22/muni-stale-price-macro">GitHub</a>.</p>
 
   <footer>
